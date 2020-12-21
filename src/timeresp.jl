@@ -4,7 +4,7 @@
 # here. This shouldn't be an issue, but it might be.
 """`y, t, x = step(sys[, Tf])` or `y, t, x = step(sys[, t])`
 
-Calculate the step response of system `sys`. If the final time `Tf` or time
+Calculate the response of the system `sys` to a unit step at time `t = 0`. If the final time `Tf` or time
 vector `t` is not provided, one is calculated based on the system pole
 locations.
 
@@ -36,6 +36,9 @@ Base.step(sys::TransferFunction, t::AbstractVector; kwargs...) = step(ss(sys), t
 Calculate the impulse response of system `sys`. If the final time `Tf` or time
 vector `t` is not provided, one is calculated based on the system pole
 locations.
+The response to
+* A unit Dirac impulse at time `t=0` (continuous-time systems)
+* An impulse with magnitude `1/Ts` at time `k=0` (discrete-time systems)
 
 `y` has size `(length(t), ny, nu)`, `x` has size `(length(t), nx, nu)`"""
 function impulse(sys::AbstractStateSpace, t::AbstractVector; method=:cont)

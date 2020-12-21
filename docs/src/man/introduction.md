@@ -1,9 +1,11 @@
 # Introduction
 ## Installation
 
-To install this package simply run
+To install and use this package simply run
 ```julia
-using Pkg; Pkg.add("ControlSystems")
+using Pkg
+Pkg.add("ControlSystems")
+using ControlSystems
 ```
 
 ## Basic functions

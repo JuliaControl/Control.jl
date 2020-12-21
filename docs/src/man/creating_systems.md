@@ -5,17 +5,15 @@ DocTestSetup = quote
 end
 ```
 
-## tf - Rational Representation
-The syntax for creating a transfer function is
+## Using the `tf()` function
+The basic syntax for creating a transfer function is
 ```julia
 tf(num, den, Ts=0)
 ```
 where `num` and `den` are the polynomial coefficients of the numerator and denominator of the polynomial and `Ts` is the sample time.
 ### Example:
-```jldoctest
-tf([1.0],[1,2,1])
-
-# output
+```julia
+julia> tf([1.0],[1,2,1])
 
 TransferFunction{Continuous,ControlSystems.SisoRational{Float64}}
         1.0
@@ -27,17 +25,42 @@ Continuous-time transfer function model
 
 The transfer functions created using this method will be of type `TransferFunction{SisoRational}`.
 
-## zpk - Pole-Zero-Gain Representation
+
+
+For more general expressions, it is sometimes convenient to define `s = tf("s")` and then use the variable `s` in an expression:
+### Example:
+```julia
+julia> s = tf("s")
+
+TransferFunction{Continuous,ControlSystems.SisoRational{Int64}}
+s
+-
+1
+
+Continuous-time transfer function model
+```
+
+We can now use `s`to define a transfer-function:
+```julia
+julia> (s-1)*(s^2 + s + 1)/(s^2 + 3s + 2)/(s+1)
+
+TransferFunction{Continuous,ControlSystems.SisoRational{Int64}}
+       s^3 - 1
+---------------------
+s^3 + 4*s^2 + 5*s + 2
+
+Continuous-time transfer function model
+```
+
+## Using the `zpk()` function - Pole-Zero-Gain Representation
 Sometimes it's better to represent the transfer function by its poles, zeros and gain, this can be done using
 ```julia
 zpk(zeros, poles, gain, Ts=0)
 ```
 where `zeros` and `poles` are `Vectors` of the zeros and poles for the system and `gain` is a gain coefficient.
 ### Example
-```jldoctest
-zpk([-1.0,1], [-5, -10], 2)
-
-# output
+```julia
+julia> zpk([-1.0,1], [-5, -10], 2)
 
 TransferFunction{Continuous,ControlSystems.SisoZpk{Float64,Float64}}
    (1.0s + 1.0)(1.0s - 1.0)
@@ -51,10 +74,19 @@ The transfer functions created using this method will be of type `TransferFuncti
 
 ## Converting between types
 It is sometime useful to convert one representation to another, this is possible using the same functions, for example
+<<<<<<< HEAD
 ```jldoctest
 tf(zpk([-1], [1], 2, 0.1))
 
 # output
+=======
+```julia
+<<<<<<< HEAD
+julia>  tf(zpk([-1], [1], 2, 0.1))
+>>>>>>> ef64701 (Adding example for s=tf("s") syntax)
+=======
+julia> tf(zpk([-1], [1], 2, 0.1))
+>>>>>>> 3112475 (Update docs/src/man/creating_systems.md)
 
 TransferFunction{Discrete{Float64},ControlSystems.SisoRational{Int64}}
 2z + 2

@@ -134,6 +134,8 @@ lsimplot
                 title   --> "System Response"
                 subplot --> s2i(1,i)
                 label     --> "\$G_{$(si)}\$"
+                linestyle --> styledict[:l]
+                seriescolor --> styledict[:c]
                 t,  y[:, i]
             end
         end
@@ -143,22 +145,16 @@ end
 @userplot Stepplot
 @userplot Impulseplot
 """
-`stepeplot(sys[, Tf]; kwargs...)`` or `stepplot(sys[, t]; kwargs...)``
-Plot step response of  `sys` until final time `Tf` or at time points in the vector `t`.
-If not defined, suitable values are chosen based on `sys`.
-See also [`step`](@ref)
-
-`kwargs` is sent as argument to Plots.plot.
+    stepplot(sys[, tfinal[,  dt]])
+Plot the step response of system `sys` to a unit step at time `t = 0`.
+If the final time `tfinal` and discretization time `dt` are not prodivded, suitable values are chosen based on `sys`.
 """
 stepplot
 
 """
-    `impulseplot(sys[, Tf]; kwargs...)`` or `impulseplot(sys[, t]; kwargs...)``
-Plot impulse response of `sys` until final time `Tf` or at time points in the vector `t`.
-If not defined, suitable values are chosen based on `sys`.
-See also [`impulse`](@ref)
-
-`kwargs` is sent as argument to Plots.plot.
+    impulseplot(sys[, tfinal[,  dt]])
+Plot the impulse response of system `sys`. The impulse is such that the area under it is 1, with the shortest possible timestep.
+If the final time `tfinal` and discretization time `dt` are not prodivded, suitable values are chosen based on `sys`.
 """
 impulseplot
 
@@ -193,6 +189,8 @@ for (func, title, typ) = ((step, "Step Response", Stepplot), (impulse, "Impulse 
                         yguide --> ytext
                         subplot --> s2i(i,j)
                         label --> "\$G_{$(si)}\$"
+                        linestyle --> styledict[:l]
+                        seriescolor --> styledict[:c]
                         t, ydata
                     end
                 end
@@ -556,6 +554,7 @@ nicholsplot
         @series begin
             linewidth --> 2
             hover --> [Printf.@sprintf("ω = %.3f", w) for w in w]
+            seriescolor --> styledict[:c]
             angles, mag
         end
     end
@@ -589,7 +588,8 @@ sigmaplot
             @series begin
                 xscale --> :log10
                 yscale --> _PlotScaleFunc
-                seriescolor --> si
+                linestyle --> styledict[:l]
+                seriescolor --> styledict[:c]
                 w, sv[:, i]
             end
         end
