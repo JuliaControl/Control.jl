@@ -133,4 +133,58 @@ allpoles = [
 @test sort(pcl, by=LinearAlgebra.eigsortby) ≈ sort(allpoles, by=LinearAlgebra.eigsortby) 
 @test cont.B == K
 
+
+
+
+@testset "Modal form" begin
+    @info "Testing Modal form"
+
+    function isblockdiagonal(A)
+        complex_inds = findall(diag(A, -1) .!= 0)
+        diag(A, -1) ≈ -diag(A, 1) || (return false)
+        A = A - diagm(diag(A)) # remove main diagonal
+        A = A - diagm(1=>diag(A, 1))
+        A = A - diagm(-1=>diag(A, -1))
+        all(iszero, A)
+    end
+    
+    X = randn(5,5) # odd number to enforce at least one real eigval
+    E = eigen(X)
+    D,V = E
+    Db, Vb = ControlSystems.cdf2rdf(E)
+    @test isblockdiagonal(Db)
+    @test Vb*Db ≈ X*Vb
+    @test sort(real(D)) ≈ sort(diag(Db)) # real values on diagonal
+    ivals = [diag(Db, -1); diag(Db, 1)] # imag values on 1/-1 diagonals
+    @test all(v ∈ ivals for v in imag(D)) 
+
+    Xb, T = ControlSystems.blockdiagonalize(X)
+    @test T\X*T ≈ Xb
+    @test isblockdiagonal(Xb)
+
+    sys = ssrand(1,1,5) # odd number to enforce at least one real eigval
+    sysm = modal_form(sys)
+    @test tf(sys) ≈ tf(sysm)
+
+    complex_inds = findall(diag(sysm.A, -1) .!= 0)
+    @test all(sysm.C[i] > 0 for i ∈ complex_inds) # test coefficient convention
+
+    sys = ssrand(2,3,5) # test that it works for MIMO
+    sysm = modal_form(sys)
+    @test tf(sys) ≈ tf(sysm)
+    @test isblockdiagonal(sysm.A)
+
+
+    # test with repeated eigenvalues
+    X = ss(tf(1,[1,1,1])^2).A
+    E = eigen(X)
+    Db, Vb = ControlSystems.cdf2rdf(E)
+    @test isblockdiagonal(Db)
+    @test Vb*Db ≈ X*Vb
+    @test sort(real(E.values)) ≈ sort(diag(Db)) # real values on diagonal
+    ivals = [diag(Db, -1); diag(Db, 1)] # imag values on 1/-1 diagonals
+    @test all(v ∈ ivals for v in imag(E.values)) 
+    
+end
+
 end 
