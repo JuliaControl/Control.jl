@@ -116,7 +116,7 @@ P = K/(s*((J*s + b)*(L*s + R) + K^2))
 CLs = TransferFunction[kp*P/(1 + kp*P) for kp = [1, 5, 15]];
 
 # Plot the step response of the controllers
-# Any keyword arguments supported in Plots.jl can be supplied
+# Any keyword arguments supported in RecipesBase.jl can be supplied
 stepplot(CLs, label=["Kp = 1" "Kp = 5" "Kp = 15"])
 ```
 

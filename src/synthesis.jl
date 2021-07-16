@@ -18,6 +18,7 @@ See also `LQG`
 Usage example:
 ```julia
 using LinearAlgebra # For identity matrix I
+using Plots
 A = [0 1; 0 0]
 B = [0;1]
 C = [1 0]
@@ -82,6 +83,7 @@ See also `lqg`
 Usage example:
 ```julia
 using LinearAlgebra # For identity matrix I
+using Plots
 Ts = 0.1
 A = [1 Ts; 0 1]
 B = [0;1]

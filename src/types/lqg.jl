@@ -249,7 +249,7 @@ Base.:(==)(G1::LQG, G2::LQG) =
     G1.K == G2.K && G1.L == G2.L && G1.P == G2.P && G1.sysc == G2.sysc
 
 
-plot(G::LQG) = gangoffourplot(G)
+RecipesBase.plot(G::LQG) = gangoffourplot(G)
 
 function gangoffour(G::LQG)
     G.S, G.PS, G.CS, G.T
@@ -257,21 +257,9 @@ end
 
 function gangoffourplot(G::LQG; kwargs...)
     S,D,N,T = gangoffour(G)
-    f1 = sigmaplot(S, show=false, kwargs...); Plots.plot!(title="\$S = 1/(1+PC)\$")
-    f2 = sigmaplot(D, show=false, kwargs...); Plots.plot!(title="\$D = P/(1+PC)\$")
-    f3 = sigmaplot(N, show=false, kwargs...); Plots.plot!(title="\$N = C/(1+PC)\$")
-    f4 = sigmaplot(T, show=false, kwargs...); Plots.plot!(title="\$T = PC/(1+PC\$)")
-    Plots.plot(f1,f2,f3,f4)
+    f1 = sigmaplot(S, show=false, kwargs...); RecipesBase.plot!(f1, title="\$S = 1/(1+PC)\$")
+    f2 = sigmaplot(D, show=false, kwargs...); RecipesBase.plot!(f2, title="\$D = P/(1+PC)\$")
+    f3 = sigmaplot(N, show=false, kwargs...); RecipesBase.plot!(f3, title="\$N = C/(1+PC)\$")
+    f4 = sigmaplot(T, show=false, kwargs...); RecipesBase.plot!(f4, title="\$T = PC/(1+PC\$)")
+    RecipesBase.plot(f1,f2,f3,f4)
 end
-
-
-
-# function gangoffourplot(G::LQG, args...)
-#     S,D,N,T = gangoffour(G)
-#     fig = subplot(n=4,nc=2)
-#     Plots.plot!(fig[1,1],sigmaplot(S, args...), title="\$S = 1/(1+PC)\$")
-#     Plots.plot!(fig[1,2],sigmaplot(D, args...), title="\$D = P/(1+PC)\$")
-#     Plots.plot!(fig[2,1],sigmaplot(N, args...), title="\$N = C/(1+PC)\$")
-#     Plots.plot!(fig[2,2],sigmaplot(T, args...), title="\$T = PC/(1+PC\$)")
-#     return fig
-# end
