@@ -393,19 +393,87 @@ function Base.show(io::IO, sys::AbstractStateSpace)
     end
 end
 
-
-
-
 """
-`minsys = minreal(s::StateSpace, tol=sqrt(eps()))` is implemented via `baltrunc` and returns a system on diagonal form.
+Helper function for minreal. Returns `T` such that T*P*T' is diagonal for Hermitian `P`. If `unit`, T will diagonalize `P` to an identity matrix.
 """
-function minreal(s::AbstractStateSpace, tol=sqrt(eps()))
-    s = baltrunc(s, atol=tol, rtol = 0)[1]
-    try
-        return diagonalize(s)
-    catch
-        error("Minreal only implemented for diagonalizable systems.")
+function hermitian_diagonalizing(Peigen::Eigen, unit, n_keep)
+    S, U = Peigen.values, Peigen.vectors
+    S .= abs.(S)
+    S[n_keep+1:end] .= 0 # descending sort applied in hermitian_nullspace_size
+    if unit
+        T = (U*pinv(Diagonal(sqrt.(S))))'
+    else
+        T = (U*pinv(Diagonal(sign.(S))))'
     end
+end
+
+function hermitian_diagonalizing(P::AbstractMatrix, args...)
+    hermitian_diagonalizing(eigen(Hermitian(P), sortby=x->-real(x)), args...)
+end
+
+"Returns the number of eigenvalues that are smaller than tolerances"
+function hermitian_nullspace_size(P; atol, rtol)
+    e = eigen(Hermitian(P), sortby=x->-real(x))
+    evs = abs.(e.values)
+    count(e->e < atol || e < rtol*maximum(evs), evs), e
+end
+
+"""
+    minreal(sys::ST; atol = sqrt(eps()), rtol = atol>0 ? 0 : sys.nx*eps()) 
+
+Return a minimal realization. The Kalman decomposition is calculated and the subsystem which is both controllable and observable is returned. The returned system will be a balanced realization with identical and diagonal Gram matrices.
+
+Based on Ch. 3.9, Thm. 3.22 in Robust and Optimal Control.
+"""
+function minreal(sys::ST;
+    atol = sqrt(eps()),
+    rtol = atol>0 ? 0 : sys.nx*eps(eltype(sys.A)),
+) where ST <: AbstractStateSpace
+    # Notation in this implementation is the same (as far as possible) as in the reference above.
+    nx = sys.nx
+    inv(x) = pinv(x; atol, rtol) # locally shadow inv
+    P = gram(sys, :c)
+    Q = gram(sys, :o)
+
+    nnc, Peigen = hermitian_nullspace_size(P; atol, rtol) # number of non-controllable modes
+    nc = sys.nx-nnc # number of controllable modes
+
+    nno, _ = hermitian_nullspace_size(Q; atol, rtol) # number of non-observable modes
+    no = sys.nx-nno # number of observable modes
+
+    T1 = hermitian_diagonalizing(Peigen, true, nc)
+
+    Q_block = inv(T1')*Q* inv(T1)
+
+    Q11 = Q_block[1:nc, 1:nc] 
+    U1 = hermitian_diagonalizing(Q11, false, no)
+
+    Σ12b = abs.(diag(U1*Q11*U1')) # should be block(Σ₁², 0) 
+    noc = findlast(x->x>atol && x > rtol*maximum(Σ12b), Σ12b)
+    if noc === nothing
+        return ss(zero(numeric_type(sys)))
+    end
+    Σ12 = Σ12b[1:noc] # this is the new gram matrix for both controllable and observable
+    T2i = ControlSystems.blockdiag(U1, 1.0*I(nnc)) 
+    T2 = inv(T2i')
+    T4i = ControlSystems.blockdiag(Diagonal(1 ./ sqrt.(sqrt.(Σ12))), 1.0I(nx-noc))
+
+    T = inv(T4i)*T2*T1
+
+    Pz = T*P*T'
+    Qz = inv(T')*Q*inv(T)
+    if sum(abs, Pz[1:noc, 1:noc]-Qz[1:noc, 1:noc])/noc^2 > sqrt(eps())
+        @warn("minreal: Result may be inaccurate")
+    end
+    sysb = ss(T*sys.A*inv(T), T*sys.B, sys.C*inv(T), sys.D, sys.timeevol)
+    n = noc
+    A = sysb.A[1:n,1:n]
+    B = sysb.B[1:n,:]
+    C = sysb.C[:,1:n]
+    D = sysb.D
+    sysr = ss(A,B,C,D,sys.timeevol)
+
+    sysr
 end
 
 
